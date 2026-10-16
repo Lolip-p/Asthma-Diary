@@ -3,11 +3,12 @@ package com.lolipp.asthmadiary.ui.home
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -18,9 +19,25 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lolipp.asthmadiary.data.Period
 import com.lolipp.asthmadiary.data.PeakFlowEntry
 import com.lolipp.asthmadiary.data.Timing
+import com.lolipp.asthmadiary.ui.chart.PeakFlowChart
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private enum class ChartPeriod(val label: String) {
+    Week("Неделя"),
+    Month("Месяц")
+}
+
+private fun filterByPeriod(entries: List<PeakFlowEntry>, period: ChartPeriod): List<PeakFlowEntry> {
+    val now = System.currentTimeMillis()
+    val cutoff = when (period) {
+        ChartPeriod.Week -> now - 7L * 24 * 60 * 60 * 1000
+        ChartPeriod.Month -> now - 30L * 24 * 60 * 60 * 1000
+    }
+    return entries.filter { it.timestamp >= cutoff }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,19 +86,7 @@ fun HomeScreen(
             }
 
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(220.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "График появится тут",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                ChartCard(entries = entries, personalBest = maxV)
             }
 
             if (entries.isEmpty()) {
@@ -97,8 +102,47 @@ fun HomeScreen(
                     }
                 }
             } else {
-                items(entries, key = { it.id }) { e ->
-                    EntryRow(e)
+                items(entries, key = { it.id }) { e -> EntryRow(e) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChartCard(entries: List<PeakFlowEntry>, personalBest: Int?) {
+    val pagerState = rememberPagerState(pageCount = { ChartPeriod.entries.size })
+    val scope = rememberCoroutineScope()
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column {
+            TabRow(selectedTabIndex = pagerState.currentPage) {
+                ChartPeriod.entries.forEachIndexed { i, p ->
+                    Tab(
+                        selected = pagerState.currentPage == i,
+                        onClick = { scope.launch { pagerState.animateScrollToPage(i) } },
+                        text = { Text(p.label) }
+                    )
+                }
+            }
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth().height(260.dp)
+            ) { page ->
+                val period = ChartPeriod.entries[page]
+                val filtered = filterByPeriod(entries, period)
+                if (filtered.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "Нет данных за период",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    PeakFlowChart(
+                        entries = filtered,
+                        personalBest = personalBest,
+                        modifier = Modifier.fillMaxSize().padding(8.dp)
+                    )
                 }
             }
         }
