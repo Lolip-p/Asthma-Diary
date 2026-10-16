@@ -6,7 +6,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -138,7 +137,7 @@ fun AddEntryScreen(
                 FilledTonalIconButton(
                     onClick = { if (value - STEP >= MIN_VALUE) value -= STEP },
                     modifier = Modifier.size(72.dp), shape = CircleShape
-                ) { Icon(Icons.Default.Remove, null, Modifier.size(32.dp)) }
+                ) { Text("−", fontSize = 32.sp, fontWeight = FontWeight.Bold) }
                 FilledTonalIconButton(
                     onClick = { if (value + STEP <= MAX_VALUE) value += STEP },
                     modifier = Modifier.size(72.dp), shape = CircleShape

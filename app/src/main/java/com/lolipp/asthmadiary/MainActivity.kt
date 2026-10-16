@@ -3,6 +3,7 @@ package com.lolipp.asthmadiary
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
@@ -20,7 +21,6 @@ sealed interface Screen {
 class MainActivity : ComponentActivity() {
 
     override fun attachBaseContext(newBase: Context) {
-        // Применяем сохранённый язык ДО создания Activity
         super.attachBaseContext(LocaleHelper.wrap(newBase))
     }
 
@@ -30,6 +30,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             AsthmaDiaryTheme {
                 var screen by remember { mutableStateOf<Screen>(Screen.Home) }
+
+                // Кнопка «назад»: из любого экрана → Домой.
+                // На главном — стандартное поведение (выход из приложения).
+                BackHandler(enabled = screen != Screen.Home) {
+                    screen = Screen.Home
+                }
+
                 when (val s = screen) {
                     is Screen.Home -> HomeScreen(
                         onAddClick = { screen = Screen.AddEntry(null) },

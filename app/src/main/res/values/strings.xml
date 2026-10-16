@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Дневник астматика</string>
+    <string name="app_name">Asthma Diary</string>
 
     <string name="action_add_entry">Добавить запись</string>
     <string name="action_settings">Настройки</string>
