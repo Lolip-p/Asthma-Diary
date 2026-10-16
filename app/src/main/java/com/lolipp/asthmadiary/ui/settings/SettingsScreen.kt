@@ -46,7 +46,7 @@ fun SettingsScreen(
                 context.contentResolver.openOutputStream(uri)?.use {
                     it.write(json.toByteArray())
                 }
-                snackbarMsg = context.getString(R.string.settings_backup_export_done)
+                snackbarMsg = context.getString(R.string.settings_backup_export_done, 0)
             }
         }
     }
@@ -79,7 +79,11 @@ fun SettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHost) }
     ) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = 8.dp)
         ) {
             SectionHeader(stringResource(R.string.settings_notifications))
 
@@ -112,22 +116,28 @@ fun SettingsScreen(
             )
 
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     stringResource(R.string.settings_notif_check_absent),
                     modifier = Modifier.weight(1f)
                 )
-                Switch(checked = s.absentReminderEnabled, onCheckedChange = { vm.setAbsent(it) })
+                Switch(
+                    checked = s.absentReminderEnabled,
+                    onCheckedChange = { vm.setAbsent(it) }
+                )
             }
 
-            HorizontalDivider()
-
+            Spacer(Modifier.height(8.dp))
             SectionHeader(stringResource(R.string.settings_backup))
 
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
@@ -141,17 +151,7 @@ fun SettingsScreen(
                 ) { Text(stringResource(R.string.settings_backup_import)) }
             }
 
-            HorizontalDivider()
-
-            SectionHeader(stringResource(R.string.settings_pdf_section))
-            Text(
-                stringResource(R.string.settings_pdf_hint),
-                Modifier.padding(16.dp),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -160,7 +160,7 @@ fun SettingsScreen(
 private fun SectionHeader(text: String) {
     Text(
         text,
-        Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
+        Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp),
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary
     )
@@ -179,7 +179,9 @@ private fun ReminderRow(
     var showPicker by remember { mutableStateOf(false) }
 
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(Modifier.weight(1f)) {
