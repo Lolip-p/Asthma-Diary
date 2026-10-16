@@ -1,7 +1,9 @@
 package com.lolipp.asthmadiary.ui.add
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -27,7 +29,6 @@ private const val MAX_VALUE = 900
 
 private fun autoPeriod(): Period {
     val h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-    // до 15:00 считаем "утро", после — "вечер". Пользователь всегда может переключить вручную.
     return if (h < 15) Period.MORNING else Period.EVENING
 }
 
@@ -42,6 +43,7 @@ fun AddEntryScreen(
     var value by remember { mutableIntStateOf(DEFAULT_VALUE) }
     var timing by remember { mutableStateOf(Timing.BEFORE) }
     var period by remember { mutableStateOf(autoPeriod()) }
+    var note by remember { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
     var loaded by remember { mutableStateOf(entryId == null) }
 
@@ -49,7 +51,7 @@ fun AddEntryScreen(
         if (entryId != null) {
             vm.load(entryId) { e ->
                 if (e != null) {
-                    value = e.value; timing = e.timing; period = e.period
+                    value = e.value; timing = e.timing; period = e.period; note = e.note
                 }
                 loaded = true
             }
@@ -79,7 +81,7 @@ fun AddEntryScreen(
                     IconButton(
                         onClick = {
                             saving = true
-                            vm.save(entryId, value, timing, period) { onSaved() }
+                            vm.save(entryId, value, timing, period, note.trim()) { onSaved() }
                         },
                         enabled = !saving
                     ) {
@@ -91,9 +93,13 @@ fun AddEntryScreen(
         }
     ) { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).padding(24.dp),
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 SegmentedButton(
@@ -144,12 +150,21 @@ fun AddEntryScreen(
                 ) { Icon(Icons.Default.Add, null, Modifier.size(32.dp)) }
             }
 
-            Spacer(Modifier.weight(1f))
+            OutlinedTextField(
+                value = note,
+                onValueChange = { note = it },
+                label = { Text(stringResource(R.string.add_note_label)) },
+                placeholder = { Text(stringResource(R.string.add_note_hint)) },
+                modifier = Modifier.fillMaxWidth(),
+                maxLines = 3
+            )
+
+            Spacer(Modifier.height(8.dp))
 
             Button(
                 onClick = {
                     saving = true
-                    vm.save(entryId, value, timing, period) { onSaved() }
+                    vm.save(entryId, value, timing, period, note.trim()) { onSaved() }
                 },
                 enabled = !saving,
                 modifier = Modifier.fillMaxWidth().height(56.dp)

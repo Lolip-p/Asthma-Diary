@@ -105,6 +105,11 @@ fun HomeScreen(
                 }
             }
 
+            item {
+                val stats = remember(entries) { vm.computeStats(entries) }
+                StatsCard(stats)
+            }
+
             item { ChartCard(entries, maxV) }
 
             if (entries.isEmpty()) {
@@ -295,6 +300,67 @@ private fun EntryRow(e: PeakFlowEntry, onClick: () -> Unit) {
             }
             Text("${e.value}", fontSize = 24.sp, fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary)
+        }
+    }
+}
+
+
+@Composable
+private fun StatsCard(stats: Stats) {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                stringResource(R.string.stats_title),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        stringResource(R.string.stats_week_avg),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        stats.weekAvg?.toString() ?: "—",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Column {
+                    Text(
+                        stringResource(R.string.stats_month_avg),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        stats.monthAvg?.toString() ?: "—",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Column {
+                    Text(
+                        stringResource(R.string.stats_trend_label),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    val (label, color) = when (stats.trend) {
+                        Trend.UP -> stringResource(R.string.stats_trend_up) to MaterialTheme.colorScheme.primary
+                        Trend.DOWN -> stringResource(R.string.stats_trend_down) to MaterialTheme.colorScheme.error
+                        Trend.FLAT -> stringResource(R.string.stats_trend_flat) to MaterialTheme.colorScheme.onSurface
+                    }
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = color
+                    )
+                }
+            }
         }
     }
 }

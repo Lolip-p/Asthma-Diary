@@ -21,7 +21,6 @@ object PdfExporter {
     private const val MIN_Y = 50f
     private const val MAX_Y = 800f
     private const val STEP_Y = 25
-    private const val PERIOD_DAYS = 30
 
     fun buildAndShare(
         context: Context,
@@ -50,7 +49,6 @@ object PdfExporter {
         minimum: Int?
     ): File {
         val doc = PdfDocument()
-        // A4 landscape: 842 x 595 pt
         val pageInfo = PdfDocument.PageInfo.Builder(842, 595, 1).create()
         val page = doc.startPage(pageInfo)
         val c = page.canvas
@@ -77,7 +75,6 @@ object PdfExporter {
             40f, y, paintText
         ); y += 26f
 
-        // === Chart (wide) ===
         val chartLeft = 70f
         val chartRight = 820f
         val chartTop = y + 6f
@@ -90,7 +87,7 @@ object PdfExporter {
             return chartBottom - ((clamped - MIN_Y) / (MAX_Y - MIN_Y)) * chartH
         }
 
-        // grid Y each 25
+        // сетка Y каждые 25
         val gridPaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 0.4f }
         var v = MIN_Y.toInt()
         while (v <= MAX_Y.toInt()) {
@@ -98,38 +95,44 @@ object PdfExporter {
             c.drawLine(chartLeft, yy, chartRight, yy, gridPaint)
             v += STEP_Y
         }
-        // labels each 100
         var vLabel = 100
         while (vLabel <= MAX_Y.toInt()) {
-            val yy = yOf(vLabel.toFloat())
-            c.drawText(vLabel.toString(), 40f, yy + 3f, paintMuted)
+            c.drawText(vLabel.toString(), 40f, yOf(vLabel.toFloat()) + 3f, paintMuted)
             vLabel += 100
         }
         c.drawText("50", 40f, yOf(50f) + 3f, paintMuted)
         c.drawText("800", 40f, yOf(800f) + 3f, paintMuted)
 
-        // axis
         val axisPaint = Paint().apply { color = Color.DKGRAY; strokeWidth = 1f }
         c.drawLine(chartLeft, chartTop, chartLeft, chartBottom, axisPaint)
         c.drawLine(chartLeft, chartBottom, chartRight, chartBottom, axisPaint)
 
-        // === X axis: last 30 days (fixed) ===
-        val nowMs = System.currentTimeMillis()
-        val tEnd = nowMs
-        val tStart = nowMs - PERIOD_DAYS.toLong() * 24L * 60 * 60 * 1000
-        fun xOf(t: Long): Float =
-            chartLeft + ((t - tStart).toFloat() / (tEnd - tStart).toFloat()) * chartW
-
-        val dateFmt = SimpleDateFormat("dd.MM", Locale.getDefault())
-        var tLabel = tStart
-        val labelStep = 5L * 24 * 60 * 60 * 1000
-        while (tLabel <= tEnd) {
-            c.drawText(dateFmt.format(Date(tLabel)), xOf(tLabel) - 12f, chartBottom + 16f, paintMuted)
-            tLabel += labelStep
-        }
-
         val sorted = entries.sortedBy { it.timestamp }
-        if (sorted.size >= 1) {
+
+        if (sorted.isNotEmpty()) {
+            // === X: от первой до последней записи ===
+            val firstTs = sorted.first().timestamp
+            val lastTs = sorted.last().timestamp
+            val minSpan = 60L * 60 * 1000
+            val (tStart, tEnd) = if (lastTs - firstTs < minSpan) {
+                (firstTs - minSpan / 2) to (firstTs + minSpan / 2)
+            } else {
+                firstTs to lastTs
+            }
+            fun xOf(t: Long): Float =
+                chartLeft + ((t - tStart).toFloat() / (tEnd - tStart).toFloat()) * chartW
+
+            // подписи X — 5 штук равномерно
+            val dateFmt = SimpleDateFormat("dd.MM", Locale.getDefault())
+            val span = tEnd - tStart
+            for (i in 0 until 5) {
+                val t = tStart + (span * i / 4)
+                val label = dateFmt.format(Date(t))
+                val lw = paintMuted.measureText(label)
+                val x = (xOf(t) - lw / 2f).coerceIn(chartLeft, chartRight - lw)
+                c.drawText(label, x, chartBottom + 16f, paintMuted)
+            }
+
             val beforePaint = Paint().apply {
                 color = Color.rgb(33, 150, 243); strokeWidth = 2.5f; isAntiAlias = true
             }
@@ -154,14 +157,14 @@ object PdfExporter {
             drawSeries(sorted.filter { it.timing == Timing.BEFORE }, beforePaint, beforeDot)
             drawSeries(sorted.filter { it.timing == Timing.AFTER }, afterPaint, afterDot)
 
-            // legend top-right
+            // Легенда — по-русски
             val lgY = chartTop - 2f
             var lgX = chartRight - 200f
             c.drawCircle(lgX, lgY, 5f, beforeDot)
-            c.drawText("Before", lgX + 10f, lgY + 4f, paintMuted)
+            c.drawText(context.getString(R.string.pdf_legend_before), lgX + 10f, lgY + 4f, paintMuted)
             lgX += 100f
             c.drawCircle(lgX, lgY, 5f, afterDot)
-            c.drawText("After", lgX + 10f, lgY + 4f, paintMuted)
+            c.drawText(context.getString(R.string.pdf_legend_after), lgX + 10f, lgY + 4f, paintMuted)
         }
 
         doc.finishPage(page)

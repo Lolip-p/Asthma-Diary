@@ -26,10 +26,44 @@ fun SettingsScreen(
     vm: SettingsViewModel = viewModel()
 ) {
     val s by vm.settings.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var snackbarMsg by remember { mutableStateOf<String?>(null) }
+    val snackbarHost = remember { SnackbarHostState() }
+
+    LaunchedEffect(snackbarMsg) {
+        snackbarMsg?.let { snackbarHost.showSnackbar(it); snackbarMsg = null }
+    }
 
     val permLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) {
+            vm.exportBackup { json ->
+                context.contentResolver.openOutputStream(uri)?.use {
+                    it.write(json.toByteArray())
+                }
+                snackbarMsg = context.getString(R.string.settings_backup_export_done)
+            }
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            val text = context.contentResolver.openInputStream(uri)?.use {
+                it.readBytes().toString(Charsets.UTF_8)
+            } ?: ""
+            vm.importBackup(text,
+                onResult = { n -> snackbarMsg = context.getString(R.string.settings_backup_import_done, n) },
+                onError = { err -> snackbarMsg = context.getString(R.string.settings_backup_error, err) }
+            )
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -41,7 +75,8 @@ fun SettingsScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHost) }
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
@@ -75,6 +110,36 @@ fun SettingsScreen(
                 },
                 onTimeChange = { h, m -> vm.setEvening(s.eveningEnabled, h, m) }
             )
+
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    stringResource(R.string.settings_notif_check_absent),
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(checked = s.absentReminderEnabled, onCheckedChange = { vm.setAbsent(it) })
+            }
+
+            HorizontalDivider()
+
+            SectionHeader(stringResource(R.string.settings_backup))
+
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { exportLauncher.launch("asthma_diary_backup.json") },
+                    modifier = Modifier.weight(1f)
+                ) { Text(stringResource(R.string.settings_backup_export)) }
+
+                OutlinedButton(
+                    onClick = { importLauncher.launch(arrayOf("application/json")) },
+                    modifier = Modifier.weight(1f)
+                ) { Text(stringResource(R.string.settings_backup_import)) }
+            }
 
             HorizontalDivider()
 

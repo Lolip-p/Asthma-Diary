@@ -21,17 +21,20 @@ class AddEntryViewModel(app: Application) : AndroidViewModel(app) {
         value: Int,
         timing: Timing,
         period: Period,
+        note: String,
         onDone: () -> Unit
     ) {
         viewModelScope.launch {
             if (existingId != null) {
                 val old = dao.getById(existingId)
-                if (old != null) dao.update(old.copy(value = value, timing = timing, period = period))
+                if (old != null) dao.update(old.copy(
+                    value = value, timing = timing, period = period, note = note
+                ))
             } else {
                 dao.insert(
                     PeakFlowEntry(
                         timestamp = System.currentTimeMillis(),
-                        value = value, timing = timing, period = period
+                        value = value, timing = timing, period = period, note = note
                     )
                 )
             }
