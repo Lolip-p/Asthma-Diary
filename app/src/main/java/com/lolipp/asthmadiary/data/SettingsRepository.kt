@@ -4,16 +4,13 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.lolipp.asthmadiary.LocaleHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore("settings")
 
 data class AppSettings(
-    val language: String = "system",
     val morningEnabled: Boolean = false,
     val eveningEnabled: Boolean = false,
     val morningHour: Int = 8,
@@ -23,7 +20,6 @@ data class AppSettings(
 )
 
 class SettingsRepository(private val context: Context) {
-    private val KEY_LANG = stringPreferencesKey("language")
     private val KEY_M_EN = booleanPreferencesKey("morning_enabled")
     private val KEY_E_EN = booleanPreferencesKey("evening_enabled")
     private val KEY_M_H = intPreferencesKey("morning_hour")
@@ -33,7 +29,6 @@ class SettingsRepository(private val context: Context) {
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
         AppSettings(
-            language = p[KEY_LANG] ?: LocaleHelper.getSaved(context),
             morningEnabled = p[KEY_M_EN] ?: false,
             eveningEnabled = p[KEY_E_EN] ?: false,
             morningHour = p[KEY_M_H] ?: 8,
@@ -41,13 +36,6 @@ class SettingsRepository(private val context: Context) {
             eveningHour = p[KEY_E_H] ?: 20,
             eveningMinute = p[KEY_E_M] ?: 0,
         )
-    }
-
-    suspend fun setLanguage(code: String) {
-        // основной носитель — SharedPreferences (LocaleHelper), чтобы attachBaseContext
-        // нового процесса прочитал значение мгновенно
-        LocaleHelper.saveSync(context, code)
-        context.dataStore.edit { it[KEY_LANG] = code }
     }
 
     suspend fun setMorningEnabled(v: Boolean) = context.dataStore.edit { it[KEY_M_EN] = v }

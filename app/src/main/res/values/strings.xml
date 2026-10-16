@@ -1,58 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Asthma Diary</string>
+    <string name="app_name">Дневник астматика</string>
 
-    <string name="action_add_entry">Add entry</string>
-    <string name="action_settings">Settings</string>
-    <string name="action_share_pdf">Share PDF</string>
-    <string name="action_save">Save</string>
-    <string name="action_cancel">Cancel</string>
-    <string name="action_delete">Delete</string>
-    <string name="action_ok">OK</string>
-    <string name="action_back">Back</string>
+    <string name="action_add_entry">Добавить запись</string>
+    <string name="action_settings">Настройки</string>
+    <string name="action_share_pdf">Поделиться PDF</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_delete">Удалить</string>
+    <string name="action_ok">ОК</string>
+    <string name="action_back">Назад</string>
 
-    <string name="home_personal_best">Personal best</string>
-    <string name="home_minimum">Minimum</string>
-    <string name="home_chart_week">Week</string>
-    <string name="home_chart_month">Month</string>
-    <string name="home_chart_empty_period">No data for this period</string>
-    <string name="home_empty_hint">No entries yet. Tap \"Add entry\".</string>
-    <string name="home_legend_before">Before</string>
-    <string name="home_legend_after">After</string>
-    <string name="unit_l_min">L/min</string>
+    <string name="home_personal_best">Рекорд</string>
+    <string name="home_minimum">Минимум</string>
+    <string name="home_chart_week">Неделя</string>
+    <string name="home_chart_month">Месяц</string>
+    <string name="home_chart_empty_period">Нет данных за период</string>
+    <string name="home_empty_hint">Пока нет записей. Нажми «Добавить запись».</string>
+    <string name="home_legend_before">До</string>
+    <string name="home_legend_after">После</string>
+    <string name="unit_l_min">л/мин</string>
 
-    <string name="add_title_new">New entry</string>
-    <string name="add_title_edit">Edit entry</string>
-    <string name="add_timing_before">Before inhaler</string>
-    <string name="add_timing_after">After inhaler</string>
-    <string name="add_period_morning">Morning</string>
-    <string name="add_period_evening">Evening</string>
-    <string name="add_step_hint">L/min · step %1$d</string>
+    <string name="add_title_new">Новая запись</string>
+    <string name="add_title_edit">Редактирование</string>
+    <string name="add_timing_before">До ингаляции</string>
+    <string name="add_timing_after">После ингаляции</string>
+    <string name="add_period_morning">Утро</string>
+    <string name="add_period_evening">Вечер</string>
+    <string name="add_step_hint">л/мин · шаг %1$d</string>
 
-    <string name="delete_dialog_title">Delete entry?</string>
-    <string name="delete_dialog_message">This action cannot be undone.</string>
+    <string name="delete_dialog_title">Удалить запись?</string>
+    <string name="delete_dialog_message">Это действие нельзя отменить.</string>
 
-    <string name="settings_title">Settings</string>
-    <string name="settings_language">Language</string>
-    <string name="settings_language_system">System</string>
-    <string name="settings_language_ru">Русский</string>
-    <string name="settings_language_en">English</string>
-    <string name="settings_notifications">Notifications</string>
-    <string name="settings_notif_morning">Morning reminder</string>
-    <string name="settings_notif_evening">Evening reminder</string>
-    <string name="settings_notif_time">Time</string>
-    <string name="settings_pdf_section">Export</string>
-    <string name="settings_pdf_hint">PDF is generated on the main screen via \"Share PDF\".</string>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_notifications">Уведомления</string>
+    <string name="settings_notif_morning">Утреннее напоминание</string>
+    <string name="settings_notif_evening">Вечернее напоминание</string>
+    <string name="settings_notif_time">Время</string>
+    <string name="settings_pdf_section">Экспорт</string>
+    <string name="settings_pdf_hint">PDF создаётся на главном экране кнопкой «Поделиться PDF».</string>
 
-    <string name="notif_channel_name">Peak flow reminders</string>
-    <string name="notif_channel_desc">Daily reminders to take your peak flow reading</string>
-    <string name="notif_morning_title">Morning measurement</string>
-    <string name="notif_morning_text">Time to take your peak flow reading (before inhaler)</string>
-    <string name="notif_evening_title">Evening measurement</string>
-    <string name="notif_evening_text">Time to take your peak flow reading (before inhaler)</string>
+    <string name="notif_channel_name">Напоминания о замерах</string>
+    <string name="notif_channel_desc">Ежедневные напоминания сделать замер ПСВ</string>
+    <string name="notif_morning_title">Утренний замер</string>
+    <string name="notif_morning_text">Пора сделать замер ПСВ (до ингаляции)</string>
+    <string name="notif_evening_title">Вечерний замер</string>
+    <string name="notif_evening_text">Пора сделать замер ПСВ (до ингаляции)</string>
 
-    <string name="pdf_title">Peak Flow Report</string>
-    <string name="pdf_generated">Generated: %1$s</string>
-    <string name="pdf_stats">Personal best: %1$s L/min · Minimum: %2$s L/min · Entries: %3$d</string>
-    <string name="pdf_share_title">Share peak flow report</string>
+    <string name="pdf_title">Отчёт по пикфлоуметрии</string>
+    <string name="pdf_generated">Создано: %1$s</string>
+    <string name="pdf_stats">Рекорд: %1$s л/мин · Минимум: %2$s л/мин · Записей: %3$d</string>
+    <string name="pdf_share_title">Отправить отчёт ПСВ</string>
 </resources>
