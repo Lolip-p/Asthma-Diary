@@ -49,7 +49,7 @@ object LocaleHelper {
             lm.applicationLocales = if (code == "system") {
                 LocaleList.getEmptyLocaleList()
             } else {
-                LocaleList.forLanguageTag(code)
+                LocaleList(Locale.forLanguageTag(code))
             }
         }
     }
