@@ -266,7 +266,10 @@ private fun StatCard(label: String, value: String, modifier: Modifier, accent: C
 @Composable
 private fun EntryRow(e: PeakFlowEntry, onClick: () -> Unit) {
     val fmt = SimpleDateFormat("d MMM yyyy, HH:mm", Locale.getDefault())
-    Card(Modifier.fillMaxWidth(), onClick = onClick) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Row(
             Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
