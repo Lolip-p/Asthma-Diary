@@ -6,13 +6,14 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.lolipp.asthmadiary.LocaleHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore("settings")
 
 data class AppSettings(
-    val language: String = "system", // "system" | "ru" | "en"
+    val language: String = "system",
     val morningEnabled: Boolean = false,
     val eveningEnabled: Boolean = false,
     val morningHour: Int = 8,
@@ -32,7 +33,7 @@ class SettingsRepository(private val context: Context) {
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
         AppSettings(
-            language = p[KEY_LANG] ?: "system",
+            language = p[KEY_LANG] ?: LocaleHelper.getSaved(context),
             morningEnabled = p[KEY_M_EN] ?: false,
             eveningEnabled = p[KEY_E_EN] ?: false,
             morningHour = p[KEY_M_H] ?: 8,
@@ -42,7 +43,13 @@ class SettingsRepository(private val context: Context) {
         )
     }
 
-    suspend fun setLanguage(code: String) = context.dataStore.edit { it[KEY_LANG] = code }
+    suspend fun setLanguage(code: String) {
+        // Пишем в SharedPreferences — нужно для синхронного чтения в attachBaseContext
+        LocaleHelper.save(context, code)
+        // Дублируем в DataStore для консистентности
+        context.dataStore.edit { it[KEY_LANG] = code }
+    }
+
     suspend fun setMorningEnabled(v: Boolean) = context.dataStore.edit { it[KEY_M_EN] = v }
     suspend fun setEveningEnabled(v: Boolean) = context.dataStore.edit { it[KEY_E_EN] = v }
     suspend fun setMorningTime(h: Int, m: Int) = context.dataStore.edit {

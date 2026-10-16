@@ -42,7 +42,7 @@ fun PeakFlowChart(
         if (entries.isEmpty()) return@Canvas
 
         val leftPad = 44.dp.toPx()
-        val rightPad = 12.dp.toPx()
+        val rightPad = 16.dp.toPx()
         val topPad = 20.dp.toPx()
         val bottomPad = 28.dp.toPx()
         val chartW = size.width - leftPad - rightPad
@@ -76,7 +76,7 @@ fun PeakFlowChart(
             )
         }
 
-        // сетка Y
+        // сетка Y каждые 100
         var yVal = 0
         while (yVal <= maxY) {
             val y = yOf(yVal.toFloat())
@@ -94,31 +94,39 @@ fun PeakFlowChart(
         drawLine(gridColor, Offset(leftPad, topPad), Offset(leftPad, topPad + chartH), 1.dp.toPx())
         drawLine(gridColor, Offset(leftPad, topPad + chartH), Offset(leftPad + chartW, topPad + chartH), 1.dp.toPx())
 
-        // === ФИКСИРОВАННЫЙ диапазон X: [now - periodDays, now] ===
-        val now = System.currentTimeMillis()
-        val tEnd = now
-        val tStart = now - periodDays.toLong() * 24L * 60 * 60 * 1000
+        // === Ось X: от ПЕРВОЙ до ПОСЛЕДНЕЙ записи ===
+        val firstTs = sortedAsc.first().timestamp
+        val lastTs = sortedAsc.last().timestamp
+        // если разброс меньше часа — растягиваем на ±30 мин, чтобы точка была в центре
+        val minSpan = 60L * 60 * 1000
+        val (tStart, tEnd) = if (lastTs - firstTs < minSpan) {
+            (firstTs - minSpan / 2) to (firstTs + minSpan / 2)
+        } else {
+            firstTs to lastTs
+        }
         fun xOf(t: Long) =
             leftPad + ((t - tStart).toFloat() / (tEnd - tStart).toFloat()) * chartW
 
+        // подписи X
         val dateFmt = SimpleDateFormat("d MMM", Locale.getDefault())
-        val labelStepMs = when {
-            periodDays <= 7 -> 2L * 24 * 60 * 60 * 1000   // каждые 2 дня
-            else -> 7L * 24 * 60 * 60 * 1000               // каждую неделю
+        val spanMs = tEnd - tStart
+        val spanDays = spanMs / (24.0 * 60 * 60 * 1000)
+        val labelCount = when {
+            spanDays < 1.5 -> 2
+            spanDays < 4 -> 3
+            spanDays < 8 -> 4
+            else -> 6
         }
-        var tLabel = tStart
-        while (tLabel <= tEnd) {
+        val stepMs = spanMs / (labelCount - 1)
+        for (i in 0 until labelCount) {
+            val t = tStart + i * stepMs
             val layout = textMeasurer.measure(
-                text = dateFmt.format(Date(tLabel)),
+                text = dateFmt.format(Date(t)),
                 style = TextStyle(color = labelColor, fontSize = 10.sp)
             )
-            val x = (xOf(tLabel) - layout.size.width / 2f)
+            val x = (xOf(t) - layout.size.width / 2f)
                 .coerceIn(leftPad, leftPad + chartW - layout.size.width)
-            drawText(
-                layout,
-                topLeft = Offset(x, topPad + chartH + 6.dp.toPx())
-            )
-            tLabel += labelStepMs
+            drawText(layout, topLeft = Offset(x, topPad + chartH + 6.dp.toPx()))
         }
 
         val beforeList = sortedAsc.filter { it.timing == Timing.BEFORE }

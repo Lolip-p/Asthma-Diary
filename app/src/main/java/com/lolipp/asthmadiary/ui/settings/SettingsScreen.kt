@@ -11,6 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lolipp.asthmadiary.R
@@ -58,7 +61,11 @@ fun SettingsScreen(
                 ) {
                     RadioButton(
                         selected = s.language == code,
-                        onClick = { vm.setLanguage(code) }
+                        onClick = {
+                            vm.setLanguage(code) {
+                                context.findActivity()?.recreate()
+                            }
+                        }
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(label)
@@ -170,4 +177,11 @@ private fun ReminderRow(
             text = { TimePicker(state = state) }
         )
     }
+}
+
+
+private fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

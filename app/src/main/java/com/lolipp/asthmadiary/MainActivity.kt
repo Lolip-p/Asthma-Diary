@@ -1,18 +1,15 @@
 package com.lolipp.asthmadiary
 
+import android.content.Context
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.*
-import androidx.lifecycle.lifecycleScope
-import com.lolipp.asthmadiary.data.SettingsRepository
 import com.lolipp.asthmadiary.ui.add.AddEntryScreen
 import com.lolipp.asthmadiary.ui.home.HomeScreen
 import com.lolipp.asthmadiary.ui.settings.SettingsScreen
 import com.lolipp.asthmadiary.ui.theme.AsthmaDiaryTheme
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 
 sealed interface Screen {
     data object Home : Screen
@@ -20,17 +17,16 @@ sealed interface Screen {
     data object Settings : Screen
 }
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        // Применяем сохранённый язык ДО создания Activity
+        super.attachBaseContext(LocaleHelper.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        // применяем сохранённый язык при старте
-        lifecycleScope.launch {
-            val saved = SettingsRepository(applicationContext).settings.first().language
-            LocaleHelper.apply(saved)
-        }
-
         setContent {
             AsthmaDiaryTheme {
                 var screen by remember { mutableStateOf<Screen>(Screen.Home) }
