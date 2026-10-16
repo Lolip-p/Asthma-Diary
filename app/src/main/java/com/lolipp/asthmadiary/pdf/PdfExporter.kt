@@ -18,6 +18,11 @@ import kotlin.math.max
 
 object PdfExporter {
 
+    private const val MIN_Y = 50f
+    private const val MAX_Y = 800f
+    private const val STEP_Y = 25
+    private const val PERIOD_DAYS = 30
+
     fun buildAndShare(
         context: Context,
         entries: List<PeakFlowEntry>,
@@ -45,19 +50,22 @@ object PdfExporter {
         minimum: Int?
     ): File {
         val doc = PdfDocument()
-        val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create()
+        // A4 landscape: 842 x 595 pt
+        val pageInfo = PdfDocument.PageInfo.Builder(842, 595, 1).create()
         val page = doc.startPage(pageInfo)
         val c = page.canvas
 
         val paintText = Paint().apply { color = Color.BLACK; textSize = 12f; isAntiAlias = true }
-        val paintTitle = Paint().apply { color = Color.BLACK; textSize = 20f; isFakeBoldText = true; isAntiAlias = true }
+        val paintTitle = Paint().apply {
+            color = Color.BLACK; textSize = 20f; isFakeBoldText = true; isAntiAlias = true
+        }
         val paintMuted = Paint().apply { color = Color.DKGRAY; textSize = 10f; isAntiAlias = true }
 
-        var y = 50f
+        var y = 40f
         c.drawText(context.getString(R.string.pdf_title), 40f, y, paintTitle); y += 24f
 
         val now = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date())
-        c.drawText(context.getString(R.string.pdf_generated, now), 40f, y, paintMuted); y += 20f
+        c.drawText(context.getString(R.string.pdf_generated, now), 40f, y, paintMuted); y += 18f
 
         c.drawText(
             context.getString(
@@ -67,89 +75,93 @@ object PdfExporter {
                 entries.size
             ),
             40f, y, paintText
-        ); y += 24f
+        ); y += 26f
 
-        // Chart
-        val chartLeft = 60f
-        val chartRight = 555f
-        val chartTop = y + 10f
-        val chartBottom = chartTop + 220f
+        // === Chart (wide) ===
+        val chartLeft = 70f
+        val chartRight = 820f
+        val chartTop = y + 6f
+        val chartBottom = 555f
         val chartW = chartRight - chartLeft
         val chartH = chartBottom - chartTop
 
+        fun yOf(v: Float): Float {
+            val clamped = v.coerceIn(MIN_Y, MAX_Y)
+            return chartBottom - ((clamped - MIN_Y) / (MAX_Y - MIN_Y)) * chartH
+        }
+
+        // grid Y each 25
+        val gridPaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 0.4f }
+        var v = MIN_Y.toInt()
+        while (v <= MAX_Y.toInt()) {
+            val yy = yOf(v.toFloat())
+            c.drawLine(chartLeft, yy, chartRight, yy, gridPaint)
+            v += STEP_Y
+        }
+        // labels each 100
+        var vLabel = 100
+        while (vLabel <= MAX_Y.toInt()) {
+            val yy = yOf(vLabel.toFloat())
+            c.drawText(vLabel.toString(), 40f, yy + 3f, paintMuted)
+            vLabel += 100
+        }
+        c.drawText("50", 40f, yOf(50f) + 3f, paintMuted)
+        c.drawText("800", 40f, yOf(800f) + 3f, paintMuted)
+
+        // axis
+        val axisPaint = Paint().apply { color = Color.DKGRAY; strokeWidth = 1f }
+        c.drawLine(chartLeft, chartTop, chartLeft, chartBottom, axisPaint)
+        c.drawLine(chartLeft, chartBottom, chartRight, chartBottom, axisPaint)
+
+        // === X axis: last 30 days (fixed) ===
+        val nowMs = System.currentTimeMillis()
+        val tEnd = nowMs
+        val tStart = nowMs - PERIOD_DAYS.toLong() * 24L * 60 * 60 * 1000
+        fun xOf(t: Long): Float =
+            chartLeft + ((t - tStart).toFloat() / (tEnd - tStart).toFloat()) * chartW
+
+        val dateFmt = SimpleDateFormat("dd.MM", Locale.getDefault())
+        var tLabel = tStart
+        val labelStep = 5L * 24 * 60 * 60 * 1000
+        while (tLabel <= tEnd) {
+            c.drawText(dateFmt.format(Date(tLabel)), xOf(tLabel) - 12f, chartBottom + 16f, paintMuted)
+            tLabel += labelStep
+        }
+
         val sorted = entries.sortedBy { it.timestamp }
-        if (sorted.size >= 2) {
-            val rawMax = max(sorted.maxOf { it.value }, personalBest ?: 0)
-            val maxY = (((rawMax + 99) / 100) * 100).coerceAtLeast(400)
-            val tStart = sorted.first().timestamp
-            val tEnd = sorted.last().timestamp
-            val tRange = (tEnd - tStart).coerceAtLeast(1L)
-
-            fun yOf(v: Float) = chartBottom - (v / maxY) * chartH
-            fun xOf(t: Long) = chartLeft + ((t - tStart).toFloat() / tRange) * chartW
-
-            // grid
-            val gridPaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 0.5f }
-            var v = 0
-            while (v <= maxY) {
-                c.drawLine(chartLeft, yOf(v.toFloat()), chartRight, yOf(v.toFloat()), gridPaint)
-                c.drawText(v.toString(), 30f, yOf(v.toFloat()) + 3f, paintMuted)
-                v += 100
-            }
-            c.drawLine(chartLeft, chartTop, chartLeft, chartBottom, gridPaint)
-            c.drawLine(chartLeft, chartBottom, chartRight, chartBottom, gridPaint)
-
-            // two lines
+        if (sorted.size >= 1) {
             val beforePaint = Paint().apply {
-                color = Color.rgb(33, 150, 243); strokeWidth = 2f; isAntiAlias = true
+                color = Color.rgb(33, 150, 243); strokeWidth = 2.5f; isAntiAlias = true
             }
             val afterPaint = Paint().apply {
-                color = Color.rgb(76, 175, 80); strokeWidth = 2f; isAntiAlias = true
+                color = Color.rgb(76, 175, 80); strokeWidth = 2.5f; isAntiAlias = true
             }
-            val beforePoint = Paint().apply { color = Color.rgb(33, 150, 243); isAntiAlias = true }
-            val afterPoint = Paint().apply { color = Color.rgb(76, 175, 80); isAntiAlias = true }
+            val beforeDot = Paint().apply { color = Color.rgb(33, 150, 243); isAntiAlias = true }
+            val afterDot = Paint().apply { color = Color.rgb(76, 175, 80); isAntiAlias = true }
 
-            val beforeList = sorted.filter { it.timing == Timing.BEFORE }
-            val afterList = sorted.filter { it.timing == Timing.AFTER }
-
-            fun drawSeries(list: List<PeakFlowEntry>, paint: Paint, dot: Paint) {
+            fun drawSeries(list: List<PeakFlowEntry>, line: Paint, dot: Paint) {
                 for (i in 0 until list.size - 1) {
                     c.drawLine(
                         xOf(list[i].timestamp), yOf(list[i].value.toFloat()),
                         xOf(list[i + 1].timestamp), yOf(list[i + 1].value.toFloat()),
-                        paint
+                        line
                     )
                 }
                 list.forEach {
                     c.drawCircle(xOf(it.timestamp), yOf(it.value.toFloat()), 4f, dot)
                 }
             }
-            drawSeries(beforeList, beforePaint, beforePoint)
-            drawSeries(afterList, afterPaint, afterPoint)
+            drawSeries(sorted.filter { it.timing == Timing.BEFORE }, beforePaint, beforeDot)
+            drawSeries(sorted.filter { it.timing == Timing.AFTER }, afterPaint, afterDot)
 
-            // legend
-            var lx = chartLeft
-            val ly = chartTop - 4f
-            c.drawCircle(lx, ly, 4f, beforePoint)
-            c.drawText("Before", lx + 8f, ly + 4f, paintMuted)
-            lx += 70f
-            c.drawCircle(lx, ly, 4f, afterPoint)
-            c.drawText("After", lx + 8f, ly + 4f, paintMuted)
-        } else {
-            c.drawText("Not enough data for chart", chartLeft, chartTop + 40f, paintMuted)
-        }
-
-        y = chartBottom + 30f
-
-        // Recent entries table
-        val fmt = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-        c.drawText("Recent entries:", 40f, y, paintText); y += 18f
-        val recent = sorted.takeLast(20).reversed()
-        recent.forEach { e ->
-            if (y > 800f) return@forEach
-            val line = "${fmt.format(Date(e.timestamp))}   ${e.value} L/min   ${if (e.timing == Timing.BEFORE) "before" else "after"}"
-            c.drawText(line, 40f, y, paintText)
-            y += 16f
+            // legend top-right
+            val lgY = chartTop - 2f
+            var lgX = chartRight - 200f
+            c.drawCircle(lgX, lgY, 5f, beforeDot)
+            c.drawText("Before", lgX + 10f, lgY + 4f, paintMuted)
+            lgX += 100f
+            c.drawCircle(lgX, lgY, 5f, afterDot)
+            c.drawText("After", lgX + 10f, lgY + 4f, paintMuted)
         }
 
         doc.finishPage(page)

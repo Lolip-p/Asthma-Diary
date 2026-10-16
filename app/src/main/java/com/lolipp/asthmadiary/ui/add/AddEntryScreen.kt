@@ -28,7 +28,8 @@ private const val MAX_VALUE = 900
 
 private fun autoPeriod(): Period {
     val h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-    return if (h < 12) Period.MORNING else Period.EVENING
+    // до 15:00 считаем "утро", после — "вечер". Пользователь всегда может переключить вручную.
+    return if (h < 15) Period.MORNING else Period.EVENING
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

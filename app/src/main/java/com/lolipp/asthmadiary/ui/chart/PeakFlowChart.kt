@@ -25,14 +25,15 @@ import kotlin.math.max
 fun PeakFlowChart(
     entries: List<PeakFlowEntry>,
     personalBest: Int?,
+    periodDays: Int,
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
     val gridColor = MaterialTheme.colorScheme.outlineVariant
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
 
-    val beforeColor = Color(0xFF2196F3) // синий — до
-    val afterColor = Color(0xFF4CAF50)  // зелёный — после
+    val beforeColor = Color(0xFF2196F3)
+    val afterColor = Color(0xFF4CAF50)
     val zoneGreen = Color(0xFF4CAF50)
     val zoneYellow = Color(0xFFFFC107)
     val zoneRed = Color(0xFFE53935)
@@ -55,7 +56,6 @@ fun PeakFlowChart(
 
         fun yOf(v: Float) = topPad + chartH - (v / maxY) * chartH
 
-        // зоны
         if (pb > 0) {
             val greenFrom = pb * 0.8f
             val yellowFrom = pb * 0.5f
@@ -94,29 +94,33 @@ fun PeakFlowChart(
         drawLine(gridColor, Offset(leftPad, topPad), Offset(leftPad, topPad + chartH), 1.dp.toPx())
         drawLine(gridColor, Offset(leftPad, topPad + chartH), Offset(leftPad + chartW, topPad + chartH), 1.dp.toPx())
 
-        // X
-        val tStart = sortedAsc.first().timestamp
-        val tEnd = sortedAsc.last().timestamp
-        val tRange = (tEnd - tStart).coerceAtLeast(1L)
-        fun xOf(t: Long) = leftPad + ((t - tStart).toFloat() / tRange) * chartW
+        // === ФИКСИРОВАННЫЙ диапазон X: [now - periodDays, now] ===
+        val now = System.currentTimeMillis()
+        val tEnd = now
+        val tStart = now - periodDays.toLong() * 24L * 60 * 60 * 1000
+        fun xOf(t: Long) =
+            leftPad + ((t - tStart).toFloat() / (tEnd - tStart).toFloat()) * chartW
 
         val dateFmt = SimpleDateFormat("d MMM", Locale.getDefault())
-        listOf(tStart, tStart + tRange / 2, tEnd).distinct().forEach { t ->
+        val labelStepMs = when {
+            periodDays <= 7 -> 2L * 24 * 60 * 60 * 1000   // каждые 2 дня
+            else -> 7L * 24 * 60 * 60 * 1000               // каждую неделю
+        }
+        var tLabel = tStart
+        while (tLabel <= tEnd) {
             val layout = textMeasurer.measure(
-                text = dateFmt.format(Date(t)),
+                text = dateFmt.format(Date(tLabel)),
                 style = TextStyle(color = labelColor, fontSize = 10.sp)
             )
+            val x = (xOf(tLabel) - layout.size.width / 2f)
+                .coerceIn(leftPad, leftPad + chartW - layout.size.width)
             drawText(
                 layout,
-                topLeft = Offset(
-                    (xOf(t) - layout.size.width / 2f)
-                        .coerceIn(leftPad, leftPad + chartW - layout.size.width),
-                    topPad + chartH + 6.dp.toPx()
-                )
+                topLeft = Offset(x, topPad + chartH + 6.dp.toPx())
             )
+            tLabel += labelStepMs
         }
 
-        // серии
         val beforeList = sortedAsc.filter { it.timing == Timing.BEFORE }
         val afterList = sortedAsc.filter { it.timing == Timing.AFTER }
 

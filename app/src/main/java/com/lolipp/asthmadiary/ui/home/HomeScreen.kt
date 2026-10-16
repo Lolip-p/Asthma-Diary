@@ -210,9 +210,15 @@ private fun ChartCard(entries: List<PeakFlowEntry>, personalBest: Int?) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 } else {
+                    val days = if (period == ChartPeriod.Week) 7 else 30
                     Column(Modifier.fillMaxSize().padding(8.dp)) {
                         Legend()
-                        PeakFlowChart(filtered, personalBest, Modifier.fillMaxWidth().weight(1f))
+                        PeakFlowChart(
+                            entries = filtered,
+                            personalBest = personalBest,
+                            periodDays = days,
+                            modifier = Modifier.fillMaxWidth().weight(1f)
+                        )
                     }
                 }
             }

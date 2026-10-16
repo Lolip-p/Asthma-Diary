@@ -1,9 +1,9 @@
 package com.lolipp.asthmadiary
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
 import com.lolipp.asthmadiary.data.SettingsRepository
@@ -20,12 +20,12 @@ sealed interface Screen {
     data object Settings : Screen
 }
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Применяем сохранённый язык до рендера контента
+        // применяем сохранённый язык при старте
         lifecycleScope.launch {
             val saved = SettingsRepository(applicationContext).settings.first().language
             LocaleHelper.apply(saved)
