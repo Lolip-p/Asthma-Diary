@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     private val repo = SettingsRepository(app)
@@ -26,9 +27,11 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
         val app = getApplication<Application>()
         // 1) синхронно пишем в SharedPreferences
         LocaleHelper.saveSync(app, code)
-        // 2) дублируем в DataStore (для UI-состояния)
-        viewModelScope.launch { repo.setLanguage(code) }
-        // 3) полностью перезапускаем приложение
+        // 2) сообщаем системе (обязательно на API 33+)
+        LocaleHelper.applyToSystem(app, code)
+        // 3) дожидаемся записи в DataStore, чтобы UI не мигнул старым значением
+        runBlocking { repo.setLanguage(code) }
+        // 4) жёсткий перезапуск процесса
         LocaleHelper.restartApp(app)
     }
 

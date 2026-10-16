@@ -1,9 +1,13 @@
 package com.lolipp.asthmadiary
 
+import android.app.LocaleManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.os.Build
+import android.os.LocaleList
 import java.util.Locale
+import kotlin.system.exitProcess
 
 object LocaleHelper {
     private const val PREF = "locale_prefs"
@@ -24,20 +28,35 @@ object LocaleHelper {
         val code = getSaved(base)
         if (code == "system") return base
         val locale = when (code) {
-            "ru" -> Locale("ru", "RU")
-            "en" -> Locale("en", "US")
+            "ru" -> Locale.forLanguageTag("ru-RU")
+            "en" -> Locale.forLanguageTag("en-US")
             else -> return base
         }
+        Locale.setDefault(locale)
         val config = Configuration(base.resources.configuration)
-        config.setLocale(locale)
+        config.setLocales(LocaleList(locale))
         return base.createConfigurationContext(config)
     }
 
     /**
-     * Полный перезапуск приложения.
-     * FLAG_ACTIVITY_CLEAR_TASK убивает весь текущий стек,
-     * FLAG_ACTIVITY_NEW_TASK создаёт новый task → новый Activity → attachBaseContext
-     * с уже сохранённой локалью.
+     * Сообщаем ОС выбранную локаль. С API 33 это критично:
+     * без этого система может перетереть нашу локаль системной
+     * при пересоздании процесса → UI остаётся английским.
+     */
+    fun applyToSystem(context: Context, code: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val lm = context.getSystemService(LocaleManager::class.java) ?: return
+            lm.applicationLocales = if (code == "system") {
+                LocaleList.getEmptyLocaleList()
+            } else {
+                LocaleList.forLanguageTag(code)
+            }
+        }
+    }
+
+    /**
+     * Жёсткий перезапуск процесса. Гарантирует, что attachBaseContext
+     * вызовется заново и кэши Resources/Locale не переиспользуются.
      */
     fun restartApp(context: Context) {
         val intent = context.packageManager
@@ -47,5 +66,6 @@ object LocaleHelper {
             Intent.FLAG_ACTIVITY_CLEAR_TASK
         )
         context.startActivity(intent)
+        exitProcess(0)
     }
 }
