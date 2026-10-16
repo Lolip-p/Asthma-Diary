@@ -44,9 +44,9 @@ class SettingsRepository(private val context: Context) {
     }
 
     suspend fun setLanguage(code: String) {
-        // Пишем в SharedPreferences — нужно для синхронного чтения в attachBaseContext
-        LocaleHelper.save(context, code)
-        // Дублируем в DataStore для консистентности
+        // основной носитель — SharedPreferences (LocaleHelper), чтобы attachBaseContext
+        // нового процесса прочитал значение мгновенно
+        LocaleHelper.saveSync(context, code)
         context.dataStore.edit { it[KEY_LANG] = code }
     }
 

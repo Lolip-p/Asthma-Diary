@@ -22,11 +22,14 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
         Reminders.ensureChannel(app)
     }
 
-    fun setLanguage(code: String, onApplied: () -> Unit) {
-        // сохраняем синхронно, чтобы attachBaseContext при recreate() уже прочитал новое
-        LocaleHelper.save(getApplication(), code)
+    fun setLanguage(code: String) {
+        val app = getApplication<Application>()
+        // 1) синхронно пишем в SharedPreferences
+        LocaleHelper.saveSync(app, code)
+        // 2) дублируем в DataStore (для UI-состояния)
         viewModelScope.launch { repo.setLanguage(code) }
-        onApplied()
+        // 3) полностью перезапускаем приложение
+        LocaleHelper.restartApp(app)
     }
 
     fun setMorning(enabled: Boolean, hour: Int, minute: Int) {

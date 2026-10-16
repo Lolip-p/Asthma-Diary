@@ -61,11 +61,7 @@ fun SettingsScreen(
                 ) {
                     RadioButton(
                         selected = s.language == code,
-                        onClick = {
-                            vm.setLanguage(code) {
-                                context.findActivity()?.recreate()
-                            }
-                        }
+                        onClick = { vm.setLanguage(code) }
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(label)
