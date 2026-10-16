@@ -8,6 +8,7 @@ import com.lolipp.asthmadiary.data.PeakFlowEntry
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val dao = AppDatabase.get(app).peakFlowDao()
@@ -20,4 +21,8 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
 
     val minValue: StateFlow<Int?> = dao.getMin()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    fun delete(entry: PeakFlowEntry) {
+        viewModelScope.launch { dao.delete(entry) }
+    }
 }

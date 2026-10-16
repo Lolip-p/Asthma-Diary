@@ -1,4 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Asthma Diary</string>
+
+    <string name="action_add_entry">Add entry</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_share_pdf">Share PDF</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_ok">OK</string>
+    <string name="action_back">Back</string>
+
+    <string name="home_personal_best">Personal best</string>
+    <string name="home_minimum">Minimum</string>
+    <string name="home_chart_week">Week</string>
+    <string name="home_chart_month">Month</string>
+    <string name="home_chart_empty_period">No data for this period</string>
+    <string name="home_empty_hint">No entries yet. Tap \"Add entry\".</string>
+    <string name="home_legend_before">Before</string>
+    <string name="home_legend_after">After</string>
+    <string name="unit_l_min">L/min</string>
+
+    <string name="add_title_new">New entry</string>
+    <string name="add_title_edit">Edit entry</string>
+    <string name="add_timing_before">Before inhaler</string>
+    <string name="add_timing_after">After inhaler</string>
+    <string name="add_period_morning">Morning</string>
+    <string name="add_period_evening">Evening</string>
+    <string name="add_step_hint">L/min · step %1$d</string>
+
+    <string name="delete_dialog_title">Delete entry?</string>
+    <string name="delete_dialog_message">This action cannot be undone.</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_notif_morning">Morning reminder</string>
+    <string name="settings_notif_evening">Evening reminder</string>
+    <string name="settings_notif_time">Time</string>
+    <string name="settings_pdf_section">Export</string>
+    <string name="settings_pdf_hint">PDF is generated on the main screen via \"Share PDF\".</string>
+
+    <string name="notif_channel_name">Peak flow reminders</string>
+    <string name="notif_channel_desc">Daily reminders to take your peak flow reading</string>
+    <string name="notif_morning_title">Morning measurement</string>
+    <string name="notif_morning_text">Time to take your peak flow reading (before inhaler)</string>
+    <string name="notif_evening_title">Evening measurement</string>
+    <string name="notif_evening_text">Time to take your peak flow reading (before inhaler)</string>
+
+    <string name="pdf_title">Peak Flow Report</string>
+    <string name="pdf_generated">Generated: %1$s</string>
+    <string name="pdf_stats">Personal best: %1$s L/min · Minimum: %2$s L/min · Entries: %3$d</string>
+    <string name="pdf_share_title">Share peak flow report</string>
 </resources>
